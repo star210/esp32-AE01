@@ -1,0 +1,82 @@
+#pragma once
+#include "settings.hpp"
+
+struct inputData {
+  char* inputName;
+  int inputPin;
+  bool inputState;
+  unsigned long inputStartTime;
+}
+
+#define NUM_INPUTS 8
+
+inputData[NUM_INPUTS] = {
+  "inZero", 18, false, 0,      // Input 0 Pin
+  "inOne", 39, false, 0,      // Input 1 Pin
+  "inTwo", 34, false, 0,      // Input 2 Pin
+  "inThree", 35, false, 0,      // Input 3 Pin
+  "inFour", 19, false, 0,      // Input 4 Pin
+  "inFive", 21, false, 0,      // Input 5 Pin
+  "inSix", 22, false, 0,      // Input 6 Pin
+  "inSeven", 23, false, 0       // Input 7 Pin
+};
+
+class _Input {
+  public:
+
+    void begin() {
+      // Set pinMode for all pins
+      for (int i = 0; i < NUM_INPUTS; i++) {
+        pinMode(inputData[i].inputPin, INPUT_PULLUP);
+      }
+    }
+
+    bool state(char* messageName) {
+      for (int i = 0; i < NUM_OUTPUTS; i++) {
+        if (strcmp(messageName, inputData[i].inputName) == 0) {
+          return inputData[i].inputState;
+        }
+      }
+    }
+
+    char* update() {
+      for (int i = 0; i < NUM_INPUTS; i++) {
+        auto timeNow = millis();
+        int inputReading = digitalRead(inputData[i].inputPin);
+
+        // Check if digitalRead matches on state and that it is has been off before
+        if (inputReading != inputData[i].inputState) {     // If pin is equal to triggered state
+          inputData[i].inputStartTime = timeNow;  // start timer
+        }
+        // Check if still on after debounce time
+        if (timeNow - inputData[i].inputStartTime >= settings["inputDelay"]) {
+          inputData[i].inputState = !inputData[i].inputState;
+          // Only print and publish if true
+          //  if (inputData[i].inputState == true) {                 // Uncomment if true only needed
+          // Publish MQTT input trigger high message
+          Serial.print("Input: ");
+          Serial.print(inputData[i].inputName);
+          Serial.print(" State: ");
+          Serial.println(inputData[i].inputState);
+
+          // Join string and int delimited by a "/"
+          char msg[20];
+          snprintf(msg, sizeof msg, "%s/%d", inputData[i].inputName, inputData[i].inputState);
+          // Copy char array to a char pointer so return a pointer
+          char *result = (char *)malloc(strlen(msg) + 1);
+          strcpy(result, msg);
+         // Serial.print(msg);
+         // Serial.println("End");
+          return result;
+       //   return inputData[i].inputName;
+          //   }
+        }
+      }
+      return "none";
+    }
+
+  public:
+
+};
+
+extern _Input Input;
