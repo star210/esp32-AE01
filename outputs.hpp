@@ -18,10 +18,10 @@ outputData[NUM_OUTPUTS] = {
   "relayOne", 4, false, false, 0,              // AE01 Pin 12
   "relayTwo", 12, false, false, 0,              // AE01 Pin 13
   "relayThree", 13, false, false, 0,              // AE01 Pin 15
-//  "relayFour", 2, false, false, 0,
-//  "relayFive", 33, false, false, 0,
-//  "transZero", 27, false, false, 0,
-//  "transOne", 26, false, false, 0,
+  //  "relayFour", 2, false, false, 0,
+  //  "relayFive", 33, false, false, 0,
+  //  "transZero", 27, false, false, 0,
+  //  "transOne", 26, false, false, 0,
 };
 
 using namespace std;
@@ -35,6 +35,20 @@ class _Output {
         pinMode(outputData[i].outputPin, OUTPUT);
         // Write default states to pins
         digitalWrite(outputData[i].outputPin, outputData[i].outputState);
+      }
+    }
+
+    void process (char* payloadAsChar, char* payloadData) {
+      //  // Convert payload data to int when there is something to convert
+      payloadData[sizeof(payloadData)] = '\0';                                          // Make payload a string by NULL terminating it.
+      int payloadDataAsInt = atoi(payloadData);
+      if (payloadDataAsInt == 1) {
+        start(payloadAsChar);
+        return;
+      }
+      if (payloadDataAsInt == 0) {
+        stop(payloadAsChar);
+        return;
       }
     }
 
@@ -72,7 +86,7 @@ class _Output {
       auto timeNow = millis();
       // check if output is on before checking if its a 0
       for (int i = 0; i < NUM_OUTPUTS; i++) {
-        
+
         if (outputData[i].outputState == true) {
           // convert char* to string
           string nameStr(outputData[i].outputName);
@@ -83,20 +97,20 @@ class _Output {
             }
           }
         }
-            if (outputData[i].outputState != outputData[i].prevState) {
-              // Update pins only if state has changed
-              digitalWrite(outputData[i].outputPin, outputData[i].outputState);
-              Serial.print("Output: ");
-              Serial.print(outputData[i].outputName);
-              Serial.print(" State: ");
-              Serial.println(outputData[i].outputState);
-              // Update previous state
-              outputData[i].prevState = outputData[i].outputState;
-            }
-          }
+        if (outputData[i].outputState != outputData[i].prevState) {
+          // Update pins only if state has changed
+          digitalWrite(outputData[i].outputPin, outputData[i].outputState);
+          Serial.print("Output: ");
+          Serial.print(outputData[i].outputName);
+          Serial.print(" State: ");
+          Serial.println(outputData[i].outputState);
+          // Update previous state
+          outputData[i].prevState = outputData[i].outputState;
         }
-      
-    
+      }
+    }
+
+
   public:
     bool prevState = false;
 };

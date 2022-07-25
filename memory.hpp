@@ -23,6 +23,7 @@ class _Nvs {
       Serial.println("Settings updated from memory");
     }
 
+
     char* get (char* payloadName) {
       string payloadNameStr(payloadName);             // Then convert char* to string to use with unordered map
       for (auto &pair : settings) {
@@ -41,21 +42,25 @@ class _Nvs {
       }
     }
 
-    void set(char* payloadName, int dataAsInt) {
+    void set(char* payloadName, char* payloadData) {
       string payloadNameStr(payloadName);             // Then convert char* to string to use with unordered map
+      // Convert payload data to int when there is something to convert
+      payloadData[sizeof(payloadData)] = '\0';                                          // Make payload a string by NULL terminating it.
+      int payloadDataAsInt = atoi(payloadData);
+      // Now find the setting
       for (auto &pair : settings) {
         auto name = pair.first;
         if (payloadNameStr == name) {
           // Update unordered map
-          settings[name] = dataAsInt;
+          settings[name] = payloadDataAsInt;
           // Then store in memory
           preferences.begin("settings", false);  // read and write
-          preferences.putInt(payloadName, dataAsInt);
+          preferences.putInt(payloadName, payloadDataAsInt);
           // preferences.putFloat(name, payloadValue);
           preferences.end();
           Serial.print(payloadName);
           Serial.print("/");
-          Serial.print(dataAsInt);
+          Serial.print(payloadDataAsInt);
           Serial.println(" Updated");
         }
       }

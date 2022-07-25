@@ -27,7 +27,8 @@ class _Wifi {
       }
       else {
         Serial.println("Access Point Started");
-      //  Oled.displayln("Access Point Started");
+//      Oled.display("Access Point Started");
+//      Oled.displayln("192.168.4.1");
         return false;
       }
     }

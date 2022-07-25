@@ -70,7 +70,7 @@ using namespace std;
 
 void setup() {
   delay(100);
-  Wdt.begin();
+
   Nvs.begin();                                   // Update settings from nvs memory
   Serial.begin(115200);
   Wire.begin(SDA_PIN, SCL_PIN);  // this should be after Sensors.begin()
@@ -88,6 +88,7 @@ void setup() {
   Output.begin();
   Input.begin();
   Wifi.connect();
+  Wdt.begin();
   Sdcard.begin();
 
 
@@ -209,10 +210,6 @@ void callback(char* topic, byte * payload, unsigned int length) {
   char *payloadName = strtok(payloadAsChar, "/");
   char *payloadData = strtok('\0', "/");
 
-    //  // Convert payload data to int when there is something to convert
- payloadData[sizeof(payloadData)] = '\0';                                          // Make payload a string by NULL terminating it.
-  int payloadDataAsInt = atoi(payloadData);
-
   Serial.print("ID: ");
   Serial.print(payloadId);
   Serial.print(" Function: ");
@@ -224,7 +221,9 @@ void callback(char* topic, byte * payload, unsigned int length) {
 
   // If topic is a set
   if (strcmp(payloadFunc, "set") == 0) {
-     Nvs.set(payloadName, payloadDataAsInt);
+    Nvs.set(payloadName, payloadData);
+    char* reply = Nvs.get(payloadName);
+    publishMQTT("reply", reply);
   }
   // If topic is a get
   if (strcmp(payloadFunc, "get") == 0) {
@@ -233,14 +232,7 @@ void callback(char* topic, byte * payload, unsigned int length) {
   }
 
   if (strcmp(payloadFunc, "output") == 0) {
-    if (payloadDataAsInt == 1) {
-      Output.start(payloadAsChar);
-      return;
-    }
-    if (payloadDataAsInt == 0) {
-      Output.stop(payloadAsChar);
-      return;
-    }
+    Output.process(payloadAsChar, payloadData);
   }
 
   if (strcmp(payloadFunc, "timer") == 0) {
@@ -357,7 +349,6 @@ void reconnect() {
     Serial.print(" Retrying in 5 seconds");
   }
 }
-
 /*
 
   -4 : MQTT_CONNECTION_TIMEOUT - the server didn't respond within the keepalive time
