@@ -1,3 +1,7 @@
+/* 
+ *  Add variables to logSD() to pass data
+ */
+
 # pragma once
 #include <SPI.h>
 #include "FS.h"

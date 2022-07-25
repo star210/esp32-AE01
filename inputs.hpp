@@ -11,14 +11,14 @@ struct inputData {
 #define NUM_INPUTS 8
 
 inputData[NUM_INPUTS] = {
-  "inZero", 18, false, 0,      // Input 0 Pin
-  "inOne", 39, false, 0,      // Input 1 Pin
-  "inTwo", 34, false, 0,      // Input 2 Pin
-  "inThree", 35, false, 0,      // Input 3 Pin
-  "inFour", 19, false, 0,      // Input 4 Pin
-  "inFive", 21, false, 0,      // Input 5 Pin
-  "inSix", 22, false, 0,      // Input 6 Pin
-  "inSeven", 23, false, 0       // Input 7 Pin
+  "inZero", 14, false, 0,              // AE01 Pin 18
+  "inOne", 32, false, 0,              // AE01 Pin 39
+  "inTwo", 21, false, 0,              // AE01 Pin 34
+  "inThree", 22, false, 0,              // AE01 Pin 35
+  "inFour", 33, false, 0,              // AE01 Pin 19
+  "inFive", 34, false, 0,              // AE01 Pin 21
+  "inSix", 35, false, 0,              // AE01 Pin 22
+  "inSeven", 25, false, 0              // AE01 Pin 23
 };
 
 class _Input {

@@ -11,17 +11,17 @@ struct outputData {
 }
 
 // name, pin, state, start time
-#define NUM_OUTPUTS 8
+#define NUM_OUTPUTS 4
 
 outputData[NUM_OUTPUTS] = {
-  "relayZero", 14, false, false, 0,
-  "relayOne", 12, false, false, 0,
-  "relayTwo", 13, false, false, 0,
-  "relayThree", 15, false, false, 0,
-  "relayFour", 2, false, false, 0,
-  "relayFive", 33, false, false, 0,
-  "transZero", 27, false, false, 0,
-  "transOne", 26, false, false, 0,
+  "relayZero", 2, false, false, 0,              // AE01 Pin 14
+  "relayOne", 4, false, false, 0,              // AE01 Pin 12
+  "relayTwo", 12, false, false, 0,              // AE01 Pin 13
+  "relayThree", 13, false, false, 0,              // AE01 Pin 15
+//  "relayFour", 2, false, false, 0,
+//  "relayFive", 33, false, false, 0,
+//  "transZero", 27, false, false, 0,
+//  "transOne", 26, false, false, 0,
 };
 
 using namespace std;
