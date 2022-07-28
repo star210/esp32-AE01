@@ -41,6 +41,7 @@ class _Output {
     void process (char* payloadAsChar, char* payloadData) {
       //  // Convert payload data to int when there is something to convert
       payloadData[sizeof(payloadData)] = '\0';                                          // Make payload a string by NULL terminating it.
+     // int atoi(const char *nptr);
       int payloadDataAsInt = atoi(payloadData);
       if (payloadDataAsInt == 1) {
         start(payloadAsChar);

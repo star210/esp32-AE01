@@ -5,14 +5,8 @@ class _Time {
 
     char* getUptime() {
       auto timeNow = millis();
-      if (timeNow >= 3000000000) {
-        highMillis = true;
-      }
-      if (timeNow <= 100000 && highMillis == true) {
-        rollover++;
-        highMillis = false;
-      }
-      long upSeconds = timeNow / 1000;
+
+      upSeconds = timeNow / 1000;
       seconds = upSeconds % 60;
       minutes = (upSeconds / 60) % 60;
       hours = (upSeconds / (60 * 60)) % 24;
@@ -25,9 +19,9 @@ class _Time {
 
   public:
     char timeStr[30];
-    long days, lastUpdate;
-    int hours, minutes, seconds, rollover;
-    bool highMillis = false;
+    unsigned long lastUpdate, upSeconds;
+    int hours, minutes, seconds, days;
+
 
 };
 
