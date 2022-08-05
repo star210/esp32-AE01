@@ -1,17 +1,14 @@
 /* To Do list
-
   - add temp sensor DS18B20
   - Add ethernet
   - Move MQTT to class
-  - Move preferences to class Nvs
   - Add NPT time server to wifi or time class ?
-
 */
 
 #include "stdlib.h"
 
 #include <PubSubClient.h>
-#include <Preferences.h>
+//#include <Preferences.h>
 
 #include "settings.hpp"
 #include "oled.hpp"
@@ -32,7 +29,7 @@ _Input Input;
 _Output Output;
 _Wifi Wifi;
 _Time Time;
-_Nvs Nvs;
+_Memory Memory;
 
 Buttons buttons;
 Oled Oled;
@@ -43,9 +40,14 @@ WiFiClient espClient;
 PubSubClient client(espClient);
 Preferences preferences;
 
-char *inputMessage = "";
 char *payloadAsChar = "";
+
 bool publishInputMessage = false;
+static char inputMessage[32];
+
+static char publishArray[32];
+static char subscribeArray[32];
+static char rpmArray[8];
 
 // MQTT Broker
 const char *mqtt_broker = "broker.emqx.io";
@@ -66,12 +68,12 @@ int rpm;
 
 bool inputBool = false;
 
-using namespace std;
+//using namespace std;
 
 void setup() {
   delay(100);
 
-  Nvs.begin();                                   // Update settings from nvs memory
+  Memory.begin();                                   // Update settings from nvs memory
   Serial.begin(115200);
   Wire.begin(SDA_PIN, SCL_PIN);  // this should be after Sensors.begin()
   Serial.print("Running software V");
@@ -88,7 +90,7 @@ void setup() {
   Output.begin();
   Input.begin();
   Wifi.connect();
-  Wdt.begin();
+ // Wdt.begin();
   Sdcard.begin();
 
 
@@ -102,18 +104,15 @@ void loop() {
   // Update loops
   Output.update();
   Timer.update();
-  Wdt.update();
+ // Wdt.update();
 
-  publishInput();
   publishSystem();
 
   if (buttons.pressed() == Buttons::SELECT) {
     publishMQTT("button", "SELECT" );
   }
 
-  inputMessage = Input.update();
-  if (inputMessage != "none") {
-
+  if (Input.update(inputMessage) == true) {
     if (strcmp(inputMessage, "inFive/1") == 0) {
       Serial.println("Button Pushed");
       if (counter > 3) {
@@ -166,6 +165,11 @@ void loop() {
       publishMQTT("input", inputMessage);
       Serial.println(inputMessage);
     }
+
+    if (publishInputMessage == true) {                     // Only publish if switched on
+      publishMQTT("input", inputMessage);
+    }
+
   }
 
   if (Timer.state("timerTwo") == false) {
@@ -199,7 +203,7 @@ void loop() {
 }
 
 void callback(char* topic, byte * payload, unsigned int length) {
-
+  static char reply[32];
   //Conver *byte to char*
   payload[length] = '\0';   //First terminate payload with a NULL
   payloadAsChar = (char*)payload;
@@ -221,13 +225,13 @@ void callback(char* topic, byte * payload, unsigned int length) {
 
   // If topic is a set
   if (strcmp(payloadFunc, "set") == 0) {
-    Nvs.set(payloadName, payloadData);
-    char* reply = Nvs.get(payloadName);
-    publishMQTT("reply", reply);
+    Memory.set(payloadName, payloadData);
+    Memory.get(payloadName, reply);   // Uncomment to send a reply
+    publishMQTT("reply", reply);      // Uncomment to send a reply
   }
   // If topic is a get
   if (strcmp(payloadFunc, "get") == 0) {
-    char* reply = Nvs.get(payloadName);
+    Memory.get(payloadName, reply);
     publishMQTT("reply", reply);
   }
 
@@ -255,63 +259,41 @@ void callback(char* topic, byte * payload, unsigned int length) {
     }
 
     if (strcmp(payloadName, "save") == 0) {
-      Nvs.save();
+      Memory.save();
     }
 
     if (strcmp(payloadName, "erase") == 0) {
-      Nvs.erase();
+      Memory.erase();
     }
   }
   // End of MQTT callback
 }
 
-char* rpmToPtr (int rpmAsInt) {
-  // Convert to char pointer to publish
-  char rpmChr[10];
-  snprintf(rpmChr, sizeof rpmChr, "%d", rpmAsInt);
-  // Copy char array to a char pointer so return a pointer
-  char *rpmPtr = (char *)malloc(strlen(rpmChr) + 1);
-  strcpy(rpmPtr, rpmChr);
-  Serial.print("RPM: ");
-  Serial.println(rpmPtr);
-  return rpmPtr;
-}
-
-
-void publishInput() {
-  if (publishInputMessage == true) {                     // Only publish if switched on
-    char* inputMessage = Input.update();
-    if (inputMessage != "none") {
-      publishMQTT("input", inputMessage);
-    }
-  }
-}
+//void rpmToPtr (int rpmAsInt, char* rpmArray) {
+// sprintf(rpmArray, "%d", rpmAsInt);
+//  Serial.print("RPM: ");
+//  Serial.println(rpmAsInt);
+//}
 
 void publishMQTT(char* topic, char* payload) {
-  char dataArray[30];
-  snprintf(dataArray, sizeof dataArray, "%s/%s", mqtt_ID, topic);
-  char *result = (char *)malloc(strlen(dataArray) + 1);                 // Copy char array to a char pointer so return a pointer
-  strcpy(result, dataArray);
-  client.publish(result, payload);
-  Serial.print(result);
+  sprintf(publishArray, "%s/%s", mqtt_ID, topic);
+  client.publish(publishArray, payload);
+  Serial.print(publishArray);
   Serial.print("/");
   Serial.println(payload);
 }
 
 void subscribeMQTT(char* topic) {
-  char dataArray[30];
-  snprintf(dataArray, sizeof dataArray, "%s/%s", mqtt_ID, topic);
-  char *result = (char *)malloc(strlen(dataArray) + 1);                 // Copy char array to a char pointer so return a pointer
-  strcpy(result, dataArray);
-  client.subscribe(result);
-  Serial.println(result);
+  sprintf(subscribeArray, "%s/%s", mqtt_ID, topic);
+  client.subscribe(subscribeArray);
+  Serial.println(subscribeArray);
 }
 
 void publishSystem () {
   if (Timer.state("timerOne") == false) {
     publishMQTT("wifi", Wifi.getRssiAsQuality());
     publishMQTT("uptime", Time.getUptime());
-    publishMQTT("tacho", rpmToPtr(rpm));
+    publishMQTT("tacho", rpmArray);
     Timer.start("timerOne");                              // Retrigger for next time
   }
 }

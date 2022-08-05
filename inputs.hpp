@@ -11,14 +11,14 @@ struct inputData {
 #define NUM_INPUTS 8
 
 inputData[NUM_INPUTS] = {
-  "inZero", 14, false, 0,              // AE01 Pin 18
-  "inOne", 32, false, 0,              // AE01 Pin 39
-  "inTwo", 21, false, 0,              // AE01 Pin 34
-  "inThree", 22, false, 0,              // AE01 Pin 35
-  "inFour", 33, false, 0,              // AE01 Pin 19
-  "inFive", 34, false, 0,              // AE01 Pin 21
-  "inSix", 35, false, 0,              // AE01 Pin 22
-  "inSeven", 25, false, 0              // AE01 Pin 23
+  "inZero", 18, false, 0,              // AE01 Pin 18,  AE01-R Pin 14
+  "inOne", 39, false, 0,              // AE01 Pin 39,  AE01-R Pin 32
+  "inTwo", 34, false, 0,              // AE01 Pin 34,  AE01-R Pin 21
+  "inThree", 35, false, 0,              // AE01 Pin 35,  AE01-R Pin 22
+  "inFour", 19, false, 0,              // AE01 Pin 19,  AE01-R Pin 33
+  "inFive", 21, false, 0,              // AE01 Pin 21,  AE01-R Pin 34
+  "inSix", 22, false, 0,              // AE01 Pin 22,  AE01-R Pin 35
+  "inSeven", 23, false, 0              // AE01 Pin 23,  AE01-R Pin 25
 };
 
 class _Input {
@@ -39,7 +39,7 @@ class _Input {
       }
     }
 
-    char* update() {
+    bool update(char* inputMessage) {
       for (int i = 0; i < NUM_INPUTS; i++) {
         auto timeNow = millis();
         int inputReading = digitalRead(inputData[i].inputPin);
@@ -58,25 +58,17 @@ class _Input {
           Serial.print(inputData[i].inputName);
           Serial.print(" State: ");
           Serial.println(inputData[i].inputState);
-
-          // Join string and int delimited by a "/"
-          char msg[20];
-          snprintf(msg, sizeof msg, "%s/%d", inputData[i].inputName, inputData[i].inputState);
-          // Copy char array to a char pointer so return a pointer
-          char *result = (char *)malloc(strlen(msg) + 1);
-          strcpy(result, msg);
-         // Serial.print(msg);
-         // Serial.println("End");
-          return result;
-       //   return inputData[i].inputName;
-          //   }
+          
+          sprintf(inputMessage, "%s/%d", inputData[i].inputName, inputData[i].inputState);
+          return true;
         }
       }
-      return "none";
+      return false;
     }
 
   public:
 
+static char inputMessage[32];
 };
 
 extern _Input Input;
